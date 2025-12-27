@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study.Co – Student Wellness</title>
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #4f46e5;
+      --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .nav button {
+      background: none;
+      border: none;
+      padding: 10px;
+      text-align: left;
+      font-size: 0.95rem;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: var(--bg);
+      color: var(--accent);
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .section {
+      display: none;
+      max-width: 900px;
+    }
+
+    .section.active { display: block; }
+
+    h1 { font-size: 1.6rem; margin-bottom: 20px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Schedule */
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .schedule-grid input {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    /* Todo */
+    .todo-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .todo-form input, .todo-form select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      flex: 1;
+    }
+
+    .todo-form button {
+      padding: 10px 16px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .todo-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Pomodoro */
+    .timer {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .timer-controls button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">Study.Co</div>
+    <div class="nav">
+      <button class="active" data-section="schedule">Schedule</button>
+      <button data-section="todo">To‑Do List</button>
+      <button data-section="pomodoro">Pomodoro</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Schedule -->
+    <section id="schedule" class="section active">
+      <h1>Weekly Schedule</h1>
+      <div class="card schedule-grid">
+        <input placeholder="Monday" />
+        <input placeholder="Tuesday" />
+        <input placeholder="Wednesday" />
+        <input placeholder="Thursday" />
+        <input placeholder="Friday" />
+      </div>
+    </section>
+
+    <!-- Todo -->
+    <section id="todo" class="section">
+      <h1>To‑Do List</h1>
+      <div class="card">
+        <div class="todo-form">
+          <input id="taskInput" placeholder="Add a task" />
+          <select id="category">
+            <option>Homework</option>
+            <option>Project</option>
+            <option>Misc</option>
+          </select>
+          <button onclick="addTask()">Add</button>
+        </div>
+        <div id="todoList"></div>
+      </div>
+    </section>
+
+    <!-- Pomodoro -->
+    <section id="pomodoro" class="section">
+      <h1>Pomodoro Timer</h1>
+      <div class="card">
+        <div class="timer" id="timer">25:00</div>
+        <div class="timer-controls">
+          <button onclick="startTimer()">Start</button>
+          <button onclick="resetTimer()">Reset</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Sidebar navigation
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.section).classList.add('active');
+      });
+    });
+
+    // Todo logic
+    function addTask() {
+      const text = document.getElementById('taskInput').value;
+      const cat = document.getElementById('category').value;
+      if (!text) return;
+
+      const item = document.createElement('div');
+      item.className = 'todo-item';
+      item.innerHTML = `<span>${text} <span class="tag">(${cat})</span></span><button onclick="this.parentElement.remove()">✓</button>`;
+      document.getElementById('todoList').appendChild(item);
+      document.getElementById('taskInput').value = '';
+    }
+
+    // Pomodoro logic
+    let time = 25 * 60;
+    let interval;
+
+    function updateTimer() {
+      const min = String(Math.floor(time / 60)).padStart(2, '0');
+      const sec = String(time % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${min}:${sec}`;
+    }
+
+    function startTimer() {
+      if (interval) return;
+      interval = setInterval(() => {
+        if (time > 0) {
+          time--;
+          updateTimer();
+        } else {
+          clearInterval(interval);
+          interval = null;
+          alert('Pomodoro complete! Take a break.');
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(interval);
+      interval = null;
+      time = 25 * 60;
+      updateTimer();
+    }
+  </script>
+</body>
+</html>
